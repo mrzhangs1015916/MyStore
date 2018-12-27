@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://mybatis.org/schema/mybatis-spring
+       http://mybatis.org/schema/mybatis-spring.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd
+http://mybatis.org/schema/mybatis-spring
+http://mybatis.org/schema/mybatis-spring ">
+
+    <!--配置订单记录服务bean-->
+    <bean id="transactionRecordService" class="com.netease.mystore.service.impl.TransactionRecordServiceImpl"/>
+
+    <!--配置内容服务bean-->
+    <bean id="contentService" class="com.netease.mystore.service.impl.ContentServiceImpl"/>
+
+    <!--配置用户服务bean-->
+    <bean id="personService" class="com.netease.mystore.service.impl.PersonServiceImpl"/>
+
+    <!--启动MyBatis注解扫描-->
+    <mybatis:scan base-package="com.netease.mystore.dao"/>
+
+    <!--MyBatis会话工厂bean-->
+    <bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="mapperLocations" value="classpath:mapper/*">
+        </property>
+    </bean>
+
+    <!--定义事务切入点-->
+    <aop:config>
+        <!--将事务控制在业务层-->
+        <aop:pointcut id="daoPointCut" expression="execution(* com.netease.mystore.service.impl.*.*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="daoPointCut"/>
+    </aop:config>
+
+    <!--定义事务advice-->
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <tx:method name="*" isolation="REPEATABLE_READ" propagation="REQUIRED"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--定义事务管理器-->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--配置数据源-->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <!-- 基本配置 -->
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <!-- 连接属性配置 -->
+        <property name="connectionProperties" value="${jdbc.connectionProperties}"/>
+
+        <!-- 高级配置 -->
+        <!-- 连接数管理 -->
+        <!--InitialSize：初始化的连接数量(设置为预期业务平均访问量比较合适)-->
+        <property name="initialSize" value="${dbcp.initialSize}"/>
+        <!--MaxActive：设置连接池连接数的最大激活连接数，起到限流保护数据库的作用-->
+        <property name="maxActive" value="${dbcp.maxActive}"/>
+        <!--MaxWait：设置当请求连接数超过连接池最大激活连接数之后，等待请求的最大等待时间，毫秒级。-->
+        <property name="maxWait" value="${dbcp.maxWait}"/>
+        <!--MaxIdle：设置最大空闲连接数(空闲连接数超过该值，则会自动释放连接，直到小于等于它)-->
+        <property name="maxIdle" value="${dbcp.maxIdle}"/>
+        <!--MinIdle：设置最小空闲连接数(空闲连接数小于该值，则会自动创建连接，直到大于等于它)-->
+        <property name="minIdle" value="${dbcp.minIdle}"/>
+
+        <!-- 定期检测 -->
+        <!--TestWhileIdle：定期检测连接池中的连接是否有效，设置为true开启该功能-->
+        <property name="testWhileIdle" value="${dbcp.testWhileIdle}"/>
+        <!--MinEvictableIdleTimeMillis：连接池闲置连接的最小的空闲时间，超过该值时，该连接会被销毁，并会补充新的连接-->
+        <property name="minEvictableIdleTimeMillis" value="${dbcp.minEvictableIdleTimeMillis}"/>
+        <!--TimeBetweenEvictionRunsMillis：连接池空闲连接清理线程的运行时间间隔-->
+        <property name="timeBetweenEvictionRunsMillis" value="${dbcp.timeBetweenEvictionRunsMillis}"/>
+    </bean>
+
+    <!--配置属性文件持有者-->
+    <context:property-placeholder location="classpath:db.properties"/>
+</beans>

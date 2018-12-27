@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!-- 映射器 -->
+<!-- 命名空间:绑定接口,最好是使用完全限定名 -->
+<mapper namespace="com.netease.mystore.dao.ContentDao">
+    <!-- 查询 -->
+    <!-- id:对应接口的方法名 -->
+    <!-- parameterType:参数类型 -->
+    <!-- resultType:结果类型 -->
+    <select id="findIsBuy" resultMap="contentMap">
+        SELECT
+        c.id AS id,
+        c.price AS price,
+        title,
+        icon,
+        abstract,
+        text,
+        t.id AS tid,
+        contentId,
+        personId,
+        t.price AS tprice,
+        `time`
+        FROM content c, trx t
+        WHERE c.id = t.contentId
+    </select>
+    <select id="findIsNotBuy" resultMap="contentMap">
+        SELECT c.*
+        FROM content c
+        WHERE c.id NOT IN (SELECT t.contentId
+        FROM trx t)
+    </select>
+    <select id="findById" parameterType="String" resultMap="contentMap">
+        SELECT
+        c.id AS id,
+        c.price AS price,
+        title,
+        icon,
+        abstract,
+        text,
+        t.id AS tid,
+        contentId,
+        personId,
+        t.price AS tprice,
+        `time`
+        FROM content c LEFT JOIN trx t
+        ON c.id = t.contentId
+        WHERE c.id = #{id}
+    </select>
+
+    <select id="findContentNum" resultType="java.lang.Integer">
+        SELECT COUNT(id)
+        FROM content
+    </select>
+
+    <!--保存内容-->
+    <insert id="save" parameterType="com.netease.mystore.domain.Content" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO content(id,price,title,icon,abstract,text)
+        VALUES(NULL ,#{price}, #{title}, #{icon}, #{abst}, #{text})
+    </insert>
+    <!--更新内容-->
+    <update id="update" parameterType="com.netease.mystore.domain.Content" useGeneratedKeys="true" keyProperty="id">
+        UPDATE content
+        SET price=#{price},title=#{title},
+        icon=#{icon},abstract=#{abst},text=#{text}
+        WHERE id=#{id}
+    </update>
+    <!--通过id删除内容-->
+    <delete id="deleteById" parameterType="String">
+        DELETE FROM content WHERE id=#{id}
+    </delete>
+
+    <!-- 自定义结果集,id为contentMap -->
+    <!-- type:结果集类型 -->
+    <resultMap id="contentMap" type="com.netease.mystore.domain.Content">
+        <id property="id" column="id"/>
+        <result property="price" column="price"/>
+        <result property="title" column="title"/>
+        <result property="icon" column="icon"/>
+        <result property="abst" column="abstract"/>
+        <result property="text" column="text"/>
+        <association property="record" javaType="com.netease.mystore.domain.TransactionRecord">
+            <id property="id" column="tid"/>
+            <result property="price" column="tprice"/>
+            <result property="time" column="time"/>
+        </association>
+    </resultMap>
+</mapper>

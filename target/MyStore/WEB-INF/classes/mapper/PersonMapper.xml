@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 映射器 -->
+<!-- 命名空间:绑定接口,最好是使用完全限定名 -->
+<mapper namespace="com.netease.mystore.dao.PersonDao">
+    <!-- 查询 -->
+    <!-- id:对应接口的方法名 -->
+    <!-- parameterType:参数类型 -->
+    <!-- resultType:结果类型 -->
+    <select id="login" parameterType="com.netease.mystore.domain.Person" resultType="com.netease.mystore.domain.Person">
+        select *
+        from person
+        where userName = #{userName} and password = #{password}
+    </select>
+</mapper>
